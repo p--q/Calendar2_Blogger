@@ -8,10 +8,12 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                     var re = /\d\d(?=T\d\d:\d\d:\d\d\.\d\d\d.\d\d:\d\d)/i;  //  フィードの日時データから日を取得するための正規表現パターン。
                     var dic = {};  // キーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
                     var d;  // 投稿がある日。
+                    var url;  // サムネイルのurl。
                     vars.posts.forEach(function(e){  // 投稿のフィードデータについて
                         d = Number(re.exec(e[vars.order].$t));  // 投稿の日を取得。
                         dic[d] = dic[d] || [];  // 辞書の値の配列を初期化する。
-                        dic[d].push([e.link[4].href, e.link[4].title, e.media$thumbnail.url]);  // 辞書の値の配列に[投稿のURL, 投稿タイトル, サムネイルのURL]の配列を入れて2次元配列にする。
+                        url = (e.media$thumbnail)?e.media$thumbnail.url:null;
+                        dic[d].push([e.link[4].href, e.link[4].title, url]);  // 辞書の値の配列に[投稿のURL, 投稿タイトル, サムネイルのURL]の配列を入れて2次元配列にする。
                         }
                     );
                     cal.createCalendar(dic);  // フィードデータからカレンダーを作成する。
@@ -178,9 +180,11 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         },
         postNode: function(arr) {  // 引数は[投稿のURL, 投稿タイトル, サムネイルのURL]の配列。
             var node = nd._postflxC(); // 日の投稿のflexコンテナを取得。
-            var imgflxI = nd._imgflxI(arr);  // サムネイル画像を入れる投稿のflexアイテム。引数は配列。
+            if (arr[2]) {  // サムネイルがあるとき
+                var imgflxI = nd._imgflxI(arr);  // サムネイル画像を入れる投稿のflexアイテム。引数は配列。
+                node.appendChild(imgflxI);
+            }
             var titleflxI = nd._titleflxI(arr);
-            node.appendChild(imgflxI);
             node.appendChild(titleflxI);
             return node;
         }
