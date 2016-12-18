@@ -51,7 +51,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.m = dt.getMonth() + 1;  // 表示カレンダーの月を取得。
             vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
         }
-    };
+    };  // end of vars
     var cal = {  // カレンダーを作成するオブジェクト。
         _holidayC: "rgb(255, 0, 0)",  // 休日の文字色
         _SatC: "rgb(0, 51, 255)",  //  土曜日の文字色        
@@ -114,7 +114,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         fm: function(m) {  // 数値を2桁の固定長にする。
             return ("0" + m).slice(-2);
         }
-    };
+    };  // end of cal
     var nd = {  // HTML要素のノードを作成するオブジェクト。
         calflxC: function() {  // カレンダーのflexコンテナを返す。
             var node = eh.createElem("div");  // flexコンテナになるdiv要素を生成。
@@ -184,7 +184,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.appendChild(titleflxI);
             return node;
         }
-    };
+    };  // end of nd
     var eh = {  // イベントハンドラオブジェクト。
         _node: null,  // 投稿一覧を表示しているノード。
         _timer: null,  // ノードのハイライトを消すタイマーID。
@@ -242,7 +242,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         createElem: function(tag){  // tagの要素を作成して返す。
             return document.createElement(tag); 
         }       
-    };
+    };  // end of eh
     return cl;  // グローバルスコープにオブジェクトを出す。
 }();
 Calendar2_Blogger.all("calendar2_blogger");  // idがcalendar_bloggerの要素にカレンダーを表示させる。
