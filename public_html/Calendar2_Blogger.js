@@ -52,7 +52,6 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         vars.em = new Date(vars.y, vars.m-1, 0).getDate();  // 表示カレンダーの末日を取得。
     }
     function createCalendar(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
-        nd.init();  // ノード作成オブジェクトを初期化する。
         var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
         var day =  new Date(vars.y, vars.m-1, 1).getDay();  // 1日の曜日を取得。日曜日は0、土曜日は6になる。
         for(var i = 0; i < day; i++) { // 1日までの空白となるflexアイテムを開始曜日分まで取得。
@@ -81,26 +80,14 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         vars.elem.appendChild(nd.datePostsNode());  // 日の投稿データを表示させるflexコンテナを追加。
     }
     var nd = {  // HTML要素のノードを作成するオブジェクト。
-        init: function() {
-            nd._flxCnode = nd._flxC();  // flexコンテナ。
-            nd._flxInode = nd._flxI();  //  flexアイテム。
-        },
-        _flxC: function() {  // flexコンテナを返す。
+        calflxC: function() {  // カレンダーのflexコンテナを返す。
             var node = createElem("div");  // flexコンテナになるdiv要素を生成。
             node.style.display = "flex";  // flexコンテナにする。
-            return node;
-        },
-        calflxC: function() {  // カレンダーのflexコンテナを返す。
-            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
             node.style.flexWrap = "wrap";  // flexコンテナの要素を折り返す。 
             return node;
         },
-        _flxI: function() {  // flexアイテムを返す。
-            var node = createElem("div");  // flexアイテムになるdiv要素を生成。
-            return node;
-        },
         calflxI: function() {  // カレンダーのflexアイテムを返す。
-            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            var node = createElem("div");  // flexアイテムになるdiv要素を生成。
             node.style.flex = "1 0 14%";  // flexアイテムの最低幅を1/7弱にして均等に拡大可能とする。
             node.style.textAlign = "center";  // flexアイテムの内容を中央寄せにする。  
             return node;
@@ -113,34 +100,36 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             return node;
         },
         datePostsNode: function() {  // 日の投稿データを表示させるflexコンテナを返す。
-            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
+            var node = createElem("div");  // flexコンテナになるdiv要素を生成。
+            node.style.display = "flex";  // flexコンテナにする。
             node.id = vars.dataPostsID;  // idを設定。
             node.style.flexDirection = "column";  // flexアイテムを縦並びにする。
             return node;
         },
         _postflxC: function() {  // 日の投稿のflexコンテナを返す。
-            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
+            var node = createElem("div");  // flexコンテナになるdiv要素を生成。
+            node.style.display = "flex";  // flexコンテナにする。
             node.style.borderTop = "dashed 1px rgba(128,128,128,.5)";
             node.style.paddingTop = "5px";       
             return node;
         },
         _imgflxI: function(arr) {  // サムネイル画像の投稿のflexアイテムを返す。引数は配列。
-            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            var node = createElem("div");  // flexアイテムになるdiv要素を生成。
             node.style.flex = "0 0 72px";  // サムネイルは72pxで固定する。
             var img = createElem("img");
-            img.src = arr[2];
-            var a = nd._a(arr);
-            a.appendChild(img);
+            img.src = arr[2];  // 配列からサムネイル画像のurlを取得。
+            var a = nd._a(arr);  // 投稿のurlを入れたa要素を取得。
+            a.appendChild(img);  // サムネイル画像のノードをa要素に追加。
             node.appendChild(a);            
             return node;
         },
-        _a: function(arr) {  // a要素を返す。
+        _a: function(arr) {  // 投稿のurlを入れたa要素を返す。
             var node = createElem("a"); 
-            node.href = arr[0];
+            node.href = arr[0];  // 配列から投稿のurlを取得。
             return node.cloneNode(true);
         },
         _titleflxI: function(arr) {  // 投稿タイトルの投稿のflexアイテムを返す。
-            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            var node = createElem("div");  // flexアイテムになるdiv要素を生成。
             node.style.alignSelf = "center";
             node.style.padding = "0 5px";
             var a = nd._a(arr);
@@ -150,39 +139,12 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         },
         postNode: function(arr) {  // 引数は[投稿のURL, 投稿タイトル, サムネイルのURL]の配列。
             var node = nd._postflxC(); // 日の投稿のflexコンテナを取得。
-
-    
-    
-//            var a = createElem("a"); 
-//            a.href = arr[0];
-//            var a_t = a.cloneNode(true);
-            
             var imgflxI = nd._imgflxI(arr);  // サムネイル画像を入れる投稿のflexアイテム。引数は配列。
-//            var img_flxI = createElem("div"); 
-//            img_flxI.style.flexBasis = "72px";
-//            img_flxI.style.flexGrow = "0";
-//            img_flxI.style.flexShrink = "0";
-//            
-            
-//            var img = createElem("img");
-//            img.src = arr[2];
-//            a.appendChild(img);
-//            img_flxI.appendChild(a);
-            
             var titleflxI = nd._titleflxI(arr);
-//            a_t.textContent = arr[1];
-//            title_flxI.style.alignSelf = "center";
-//            title_flxI.style.padding = "0 5px";
-//            title_flxI.appendChild(a_t);
-            
-            
             node.appendChild(imgflxI);
             node.appendChild(titleflxI);
-            
             return node;
         }
-        
-        
     };
     var eh = {  // イベントハンドラオブジェクト。
         dic: null,
@@ -199,52 +161,6 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 });
             }
         }
-        
-        
-        
-        
-//        _tt: null, // ツールチップを表示させているノード。
-//        _timer: null,  // timeoutID
-//        _delay: 30,  // タイムアウトするミリ秒。
-//        _delay_touch: 5*1000, // タップしたときに表示するツールチップを表示するミリ秒。
-//        onMouse: function(e) {  // マウスが要素に乗ったときのイベントを受け取る関数。
-//            var target = e.target;  // イベントを発生したオブジェクト。
-//            eh._offTimer();  // ツールチップを消すタイマーをリセットする。タイマーでツールチップ表示を消すのはカレンダー外の要素に出た時のみ。
-//            if (target.className=="post") {  // ツールチップを持っている日のとき
-//                eh._offTooltip();  // 現在のツールチップ表示を消す。
-//                eh._tt = target;  // ツールチップ表示ノードを再取得。
-//                eh._tt.lastChild.style.visibility = "visible";  // ツールチップを表示させる。   
-//            } else if (target.className=="nopost") {  // ツールチップを持っていない日のとき
-//                eh._offTooltip();  // 現在のツールチップ表示を消す。
-//            }
-//        },         
-//        touchStart: function(e) {  // 要素をタップしたときのイベントを受け取る関数。
-//            var target = e.target;  // イベントを発生したオブジェクト。 
-//            if (target.className=="post") {  // ツールチップを持っているノードのとき
-//                eh._offTooltip();  // ツールチップ表示を消す
-//                eh._tt = target;  // ツールチップ表示ノードを再取得。
-//                eh._tt.lastChild.style.visibility = "visible";  // ツールチップを表示させる。  
-//                window.setTimeout(eh._offTooltip, eh._delay_touch);  // 5秒後に表示を消す。
-//            }
-//        },        
-//        offMouse: function(e) {  // マウスが要素から出たときのイベントを受け取る関数。
-//            var target = e.target;  // イベントを発生したオブジェクト。
-//            if (target.className=="post" || target.tagName=="SPAN") {  // ツールチップを持っているノードからツールチップに入らずに出るとき、またはツールチップから出るとき。ただしその中のaタグに入った時も発火する。
-//                eh._timer = window.setTimeout(eh._offTooltip, eh._delay);  // ツールチップ表示を消すのをeh._delayミリ秒遅延させ、そのtimeoutIDを取得する。          
-//            } 
-//        },        
-//        _offTooltip: function(){  // ツールチップ表示を消す関数。
-//            if (eh._tt) {  // ツールチップを表示している時
-//                eh._tt.lastChild.style.visibility = "hidden"; // ツールチップ表示を消す。
-//                eh._tt = null;  // ツールチップ表示ノードの取得を取り消す。 
-//            }
-//        },
-//        _offTimer: function() {  // ツールチップを消すタイマーをリセットする。
-//           if (eh._timer) {  // 遅延タイマーが設定されている時。
-//               window.clearTimeout(eh._timer);  // window.setTimeout() によって設定された遅延を解除する。
-//               eh._timer = null;
-//           }
-//        }        
     };
     function writeScript(url) {  // スクリプト注入。
         var ws = createElem('script');
