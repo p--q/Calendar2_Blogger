@@ -52,93 +52,132 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         vars.em = new Date(vars.y, vars.m-1, 0).getDate();  // 表示カレンダーの末日を取得。
     }
     function createCalendar(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
-        var flxCNode = nd.flxC();  // flexコンテナを得る。
+        nd.init();  // ノード作成オブジェクトを初期化する。
+        var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
         var day =  new Date(vars.y, vars.m-1, 1).getDay();  // 1日の曜日を取得。日曜日は0、土曜日は6になる。
         for(var i = 0; i < day; i++) { // 1日までの空白となるflexアイテムを開始曜日分まで取得。
-            flxCNode.appendChild(nd.flxI());  // クラス名nopostのflexアイテムをflexコンテナに追加。
+            calflxC.appendChild(nd.calflxI());  // 空白のカレンダーのflexアイテムをflexコンテナに追加。
         }
-        var flxINode;  // 日のflexアイテム。
+        var dateflxI;  // 日のflexアイテム。
         for(var i = 1; i < vars.em+1; i++) {  // 1日から末日まで。
             if (i in dic) {  // 辞書のキーに日があるとき
-                flxINode = nd.dateNodeWithPost(i); // 投稿のある日のflexアイテム。
+                dateflxI = nd.dateflxIWithPost(i); // 投稿のある日のカレンダーのflexアイテム。
             } else {  // 辞書のキーに日がないとき
-                flxINode = nd.flxI(); // 投稿のない日となるflexアイテム。  
-                flxINode.textContent = i;  // 日をtextノードに取得。
+                dateflxI = nd.calflxI(); // 投稿のない日のカレンダーのflexアイテム。  
+                dateflxI.textContent = i;  // 日をtextノードに取得。
             } 
-            flxCNode.appendChild(flxINode);  // flexコンテナに追加。
+            calflxC.appendChild(dateflxI);  // カレンダーのflexコンテナに追加。
         }
         var s = (day+vars.em) % 7;  // 7で割ったあまりを取得。
         if (s > 0) {  // 7で割り切れない時。
             for(var i = 0; i < 7-s; i++) { // 末日以降の空白を取得。
-                flxCNode.appendChild(nd.flxI());  //  クラス名nopostのflexアイテムをflexコンテナに追加。
+                calflxC.appendChild(nd.calflxI());  //  空白のカレンダーのflexアイテムをflexコンテナに追加。
             }        
         } 
-        eh.init(dic);
-        flxCNode.addEventListener( 'mousedown', eh.mouseDown, false );  // flexコンテナでイベントバブリングを受け取る。マウスが要素をクリックしたとき。
+        eh.init(dic);  // イベントハンドラのオブジェクトに投稿データの辞書を渡して初期化。
+        calflxC.addEventListener( 'mousedown', eh.mouseDown, false );  // カレンダーのflexコンテナでイベントバブリングを受け取る。マウスが要素をクリックしたとき。
         vars.elem.textContent = null;  // 追加する対象の要素の子ノードを消去する。
-        vars.elem.appendChild(flxCNode);  // 追加する対象の要素の子ノードにカレンダーのノードを追加する。
-        vars.elem.appendChild(nd.datePostsNode());
+        vars.elem.appendChild(calflxC);  // 追加する対象の要素の子ノードにカレンダーのflexコンテナを追加。
+        vars.elem.appendChild(nd.datePostsNode());  // 日の投稿データを表示させるflexコンテナを追加。
     }
     var nd = {  // HTML要素のノードを作成するオブジェクト。
-        flxC: function() {  // flexコンテナを返す。
-            var node = createElem("div");  // カレンダーのdiv要素を生成。
+        init: function() {
+            nd._flxCnode = nd._flxC();  // flexコンテナ。
+            nd._flxInode = nd._flxI();  //  flexアイテム。
+        },
+        _flxC: function() {  // flexコンテナを返す。
+            var node = createElem("div");  // flexコンテナになるdiv要素を生成。
             node.style.display = "flex";  // flexコンテナにする。
+            return node;
+        },
+        calflxC: function() {  // カレンダーのflexコンテナを返す。
+            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
             node.style.flexWrap = "wrap";  // flexコンテナの要素を折り返す。 
             return node;
         },
-        flxI: function() {  // flexアイテムを返す。
+        _flxI: function() {  // flexアイテムを返す。
             var node = createElem("div");  // flexアイテムになるdiv要素を生成。
-            node.style.flexBasis = "14%";  // flexアイテムの最低幅を1/7弱にする。
-            node.style.flexGrow = "1";  // flexコンテナの余剰pxを均等に分配する。
-            node.style.textAlign = "center";  // flexアイテムの内容を中央寄せにする。
-            return node.cloneNode(true);
+            return node;
         },
-        dateNodeWithPost: function(date) {  // ツールチップのある日のflexアイテムを返す。
-            var node = nd.flxI(); // 投稿のある日となるflexアイテムを複製。  
-            node.className = "post";
+        calflxI: function() {  // カレンダーのflexアイテムを返す。
+            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            node.style.flex = "1 0 14%";  // flexアイテムの最低幅を1/7弱にして均等に拡大可能とする。
+            node.style.textAlign = "center";  // flexアイテムの内容を中央寄せにする。  
+            return node;
+        },
+        dateflxIWithPost: function(date) {  // 投稿の日のflexアイテムを返す。
+            var node = nd.calflxI(); // カレンダーのflexアイテムを取得。  
+            node.className = "post";  // クラス名をpostにする。
             node.style.borderBottom = "1px dotted black";
             node.textContent = date;  // 日をtextノードに取得。textContentで代入すると子ノードは消えてしまうので注意。
             return node;
         },
-        datePostsNode: function() {
-            var node = createElem("div"); 
-            node.id = vars.dataPostsID;
-            node.style.display = "flex";  // flexコンテナにする。
-            node.style.flexDirection = "column";
+        datePostsNode: function() {  // 日の投稿データを表示させるflexコンテナを返す。
+            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
+            node.id = vars.dataPostsID;  // idを設定。
+            node.style.flexDirection = "column";  // flexアイテムを縦並びにする。
             return node;
         },
-        postNode: function(arr) {  // 引き数は[投稿のURL, 投稿タイトル, サムネイルのURL]の配列。
-            var node = createElem("div");  
-            node.style.display = "flex";  // flexコンテナにする。
+        _postflxC: function() {  // 日の投稿のflexコンテナを返す。
+            var node = nd._flxCnode.cloneNode(true); // flexコンテナを取得。
             node.style.borderTop = "dashed 1px rgba(128,128,128,.5)";
-            node.style.paddingTop = "5px";
-            
-    
-    
-            var a = createElem("a"); 
-            a.href = arr[0];
-            var a_t = a.cloneNode(true);
-            
-            var img_flxI = createElem("div"); 
-            img_flxI.style.flexBasis = "72px";
-            img_flxI.style.flexGrow = "0";
-            img_flxI.style.flexShrink = "0";
-            
-            
+            node.style.paddingTop = "5px";       
+            return node;
+        },
+        _imgflxI: function(arr) {  // サムネイル画像の投稿のflexアイテムを返す。引数は配列。
+            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            node.style.flex = "0 0 72px";  // サムネイルは72pxで固定する。
             var img = createElem("img");
             img.src = arr[2];
+            var a = nd._a(arr);
             a.appendChild(img);
-            img_flxI.appendChild(a);
+            node.appendChild(a);            
+            return node;
+        },
+        _a: function(arr) {  // a要素を返す。
+            var node = createElem("a"); 
+            node.href = arr[0];
+            return node.cloneNode(true);
+        },
+        _titleflxI: function(arr) {  // 投稿タイトルの投稿のflexアイテムを返す。
+            var node =  nd._flxInode.cloneNode(true); // flexアイテムを取得。
+            node.style.alignSelf = "center";
+            node.style.padding = "0 5px";
+            var a = nd._a(arr);
+            a.textContent = arr[1];
+            node.appendChild(a);            
+            return node;
+        },
+        postNode: function(arr) {  // 引数は[投稿のURL, 投稿タイトル, サムネイルのURL]の配列。
+            var node = nd._postflxC(); // 日の投稿のflexコンテナを取得。
+
+    
+    
+//            var a = createElem("a"); 
+//            a.href = arr[0];
+//            var a_t = a.cloneNode(true);
             
-            var title_flxI = createElem("div"); 
-            a_t.textContent = arr[1];
-            title_flxI.style.alignSelf = "center";
-            title_flxI.style.padding = "0 5px";
-            title_flxI.appendChild(a_t);
+            var imgflxI = nd._imgflxI(arr);  // サムネイル画像を入れる投稿のflexアイテム。引数は配列。
+//            var img_flxI = createElem("div"); 
+//            img_flxI.style.flexBasis = "72px";
+//            img_flxI.style.flexGrow = "0";
+//            img_flxI.style.flexShrink = "0";
+//            
+            
+//            var img = createElem("img");
+//            img.src = arr[2];
+//            a.appendChild(img);
+//            img_flxI.appendChild(a);
+            
+            var titleflxI = nd._titleflxI(arr);
+//            a_t.textContent = arr[1];
+//            title_flxI.style.alignSelf = "center";
+//            title_flxI.style.padding = "0 5px";
+//            title_flxI.appendChild(a_t);
             
             
-            node.appendChild(img_flxI);
-            node.appendChild(title_flxI);
+            node.appendChild(imgflxI);
+            node.appendChild(titleflxI);
             
             return node;
         }
