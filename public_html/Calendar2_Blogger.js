@@ -30,7 +30,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
                 var dt = new Date(2013,8,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
-                vars.createVars(dt);  // 日付オブジェクトからカレンダーのデータを作成。
+                vars.init(dt);  // 日付オブジェクトからカレンダーのデータを作成。
                 var max = vars.y + "-" + cal.fm(vars.m) + "-" + cal.fm(vars.em) + "T23:59:59%2B09:00";  // 表示カレンダーの最終日23時59分59秒までのフィードを得るための日時を作成。
                 cal.createURL(max);  // フィードを取得するためのURLを作成。
             } 
@@ -46,7 +46,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         elem: null,  // 置換するdiv要素。
         dataPostsID: "datePosts",  // 日の投稿の一覧を表示するdivのID
         days: ["日","月","火","水","木","金","土"],  // 曜日の配列。
-        createVars: function (dt) {  // 日付オブジェクトからカレンダーのデータを作成。
+        init: function (dt) {  // 日付オブジェクトからカレンダーのデータを作成。
             vars.y = dt.getFullYear();  // 表示カレンダーの年を取得。
             vars.m = dt.getMonth() + 1;  // 表示カレンダーの月を取得。
             vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
