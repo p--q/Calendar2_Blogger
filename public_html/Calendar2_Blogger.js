@@ -44,7 +44,8 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         posts: [],  // 投稿のフィードデータを収納する配列。
         order: "published",  // publishedかupdatedが入る。
         elem: null,  // 置換するdiv要素。
-        dataPostsID: "datePosts"  // 日の投稿の一覧を表示するdivのID
+        dataPostsID: "datePosts",  // 日の投稿の一覧を表示するdivのID
+        days: ["日","月","火","水","木","金","土"]  // 曜日の配列。
     };
     function createVars(dt) {  // 日付オブジェクトからカレンダーのデータを作成。
         vars.y = dt.getFullYear();  // 表示カレンダーの年を取得。
@@ -52,7 +53,18 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
     }
     function createCalendar(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
+        var holidayC = "rgb(255, 0, 0)";  // 休日の文字色
+        var SatC = "rgb(0, 51, 255)";  //  土曜日の文字色
         var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
+        vars.days.forEach(function(e){  // 1行目に曜日を表示させる。
+            var node = nd.calflxI(e);  // 曜日のflexアイテムを取得。
+            if (e=="日") {
+                node.style.color = holidayC;
+            } else if (e=="土") {
+                node.style.color = SatC;
+            }
+            calflxC.appendChild(node);
+        });
         var day =  new Date(vars.y, vars.m-1, 1).getDay();  // 1日の曜日を取得。日曜日は0、土曜日は6になる。
         for(var i = 0; i < day; i++) { // 1日までの空白となるflexアイテムを開始曜日分まで取得。
             calflxC.appendChild(nd.calflxI());  // 空白のカレンダーのflexアイテムをflexコンテナに追加。
@@ -62,10 +74,15 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             if (i in dic) {  // 辞書のキーに日があるとき
                 dateflxI = nd.dateflxIWithPost(i); // 投稿のある日のカレンダーのflexアイテム。
             } else {  // 辞書のキーに日がないとき
-                dateflxI = nd.calflxI(); // 投稿のない日のカレンダーのflexアイテム。  
-                dateflxI.textContent = i;  // 日をtextノードに取得。
+                dateflxI = nd.calflxI(i); // 投稿のない日のカレンダーのflexアイテム。  
                 dateflxI.className = "nopost"; 
             } 
+            dateflxI.s = (day+i-1) % 7;  // 7で割ったあまりを取得。0が日曜日、6が土曜日。
+            if (dateflxI.s==0) {
+                dateflxI.style.color = holidayC;
+            } else if (dateflxI.s==6) {
+                dateflxI.style.color = SatC;
+            }
             calflxC.appendChild(dateflxI);  // カレンダーのflexコンテナに追加。
         }
         var s = (day+vars.em) % 7;  // 7で割ったあまりを取得。
@@ -89,8 +106,9 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.style.flexWrap = "wrap";  // flexコンテナの要素を折り返す。 
             return node;
         },
-        calflxI: function() {  // カレンダーのflexアイテムを返す。
+        calflxI: function(text) {  // カレンダーのflexアイテムを返す。
             var node = createElem("div");  // flexアイテムになるdiv要素を生成。
+            node.textContent = text;
             node.style.flex = "1 0 14%";  // flexアイテムの最低幅を1/7弱にして均等に拡大可能とする。
             node.style.textAlign = "center";  // flexアイテムの内容を中央寄せにする。  
             return node;
@@ -98,7 +116,6 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         dateflxIWithPost: function(date) {  // 投稿の日のflexアイテムを返す。
             var node = nd.calflxI(); // カレンダーのflexアイテムを取得。  
             node.className = "post";  // クラス名をpostにする。
-//            node.style.borderBottom = "1px dotted black";
             node.textContent = date;  // 日をtextノードに取得。textContentで代入すると子ノードは消えてしまうので注意。
             node.style.backgroundColor = "rgba(128,128,128,.2)";  // 背景色
             node.style.borderRadius = "50%";  // 背景の角を丸める
@@ -155,7 +172,8 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
     var eh = {  // イベントハンドラオブジェクト。
         _node: null,  // 投稿一覧を表示しているノード。
         _timer: null,  // ノードのハイライトを消すタイマーID。
-        _rgbaC: null, // 背景色。
+        _rgbaC: null, // 背景色。styleオブジェクトで取得すると参照渡しになってしまう。
+        _fontC: null,  // 文字色。
         _dic: null,  // 投稿データの辞書。
         init: function(dic) {
             eh._dic = dic;
@@ -168,7 +186,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 }
                 eh._node = target;  // 投稿を表示させるノードを新たに取得。
                 var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
-                elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日";
+                elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
                 eh._dic[target.textContent].forEach(function(e) {
                     elem.appendChild(nd.postNode(e));
                 });
@@ -184,7 +202,9 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         mouseOver: function(e) {
             var target = e.target;  // イベントを発生したオブジェクト。
             if (target.className=="post") {  // 投稿がある日のとき
+                eh._style = window.getComputedStyle(e.target, '');  // 変更前のstyleを取得する。
                 target.style.textDecoration = "underline";  // 文字に下線をつける。
+                eh._fontC = window.getComputedStyle(e.target, '').color;  // 文字色を取得。
                 target.style.color = "#33aaff";  // 文字色を変える。
                 eh._rgbaC = window.getComputedStyle(e.target, '').backgroundColor;  // 背景色のRGBAを取得。
                 var alpha = Number(/\d+\.\d+/.exec(eh._rgbaC)[0]);  // 透明度を取得。
@@ -197,7 +217,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             var target = e.target;  // イベントを発生したオブジェクト。
             if (target.className=="post") {  // 投稿がある日のとき
                 target.style.textDecoration = null;  // 文字の下線を消す。 
-                target.style.color = null;  // 文字の色設定を消す。
+                target.style.color = eh._fontC;  // 変更前の文字色に戻す。
                 if (target!==eh._node) {  // そのノードの投稿一覧を表示させていないとき。
                     target.style.backgroundColor = eh._rgbaC; // 背景色を元に戻す。
                 }
