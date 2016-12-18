@@ -49,7 +49,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
     function createVars(dt) {  // 日付オブジェクトからカレンダーのデータを作成。
         vars.y = dt.getFullYear();  // 表示カレンダーの年を取得。
         vars.m = dt.getMonth() + 1;  // 表示カレンダーの月を取得。
-        vars.em = new Date(vars.y, vars.m-1, 0).getDate();  // 表示カレンダーの末日を取得。
+        vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
     }
     function createCalendar(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
         var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
@@ -64,6 +64,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             } else {  // 辞書のキーに日がないとき
                 dateflxI = nd.calflxI(); // 投稿のない日のカレンダーのflexアイテム。  
                 dateflxI.textContent = i;  // 日をtextノードに取得。
+                dateflxI.className = "nopost"; 
             } 
             calflxC.appendChild(dateflxI);  // カレンダーのflexコンテナに追加。
         }
@@ -75,6 +76,8 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         } 
         eh.init(dic);  // イベントハンドラのオブジェクトに投稿データの辞書を渡して初期化。
         calflxC.addEventListener( 'mousedown', eh.mouseDown, false );  // カレンダーのflexコンテナでイベントバブリングを受け取る。マウスが要素をクリックしたとき。
+        calflxC.addEventListener( 'mouseover', eh.mouseOver, false );  // マウスポインタが要素に入った時。
+        calflxC.addEventListener( 'mouseout', eh.mouseOut, false );  // マウスポインタが要素から出た時。
         vars.elem.textContent = null;  // 追加する対象の要素の子ノードを消去する。
         vars.elem.appendChild(calflxC);  // 追加する対象の要素の子ノードにカレンダーのflexコンテナを追加。
         vars.elem.appendChild(nd.datePostsNode());  // 日の投稿データを表示させるflexコンテナを追加。
@@ -95,8 +98,11 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         dateflxIWithPost: function(date) {  // 投稿の日のflexアイテムを返す。
             var node = nd.calflxI(); // カレンダーのflexアイテムを取得。  
             node.className = "post";  // クラス名をpostにする。
-            node.style.borderBottom = "1px dotted black";
+//            node.style.borderBottom = "1px dotted black";
             node.textContent = date;  // 日をtextノードに取得。textContentで代入すると子ノードは消えてしまうので注意。
+            node.style.backgroundColor = "rgba(128,128,128,.2)";  // 背景色
+            node.style.borderRadius = "50%";  // 背景の角を丸める
+            node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
             return node;
         },
         datePostsNode: function() {  // 日の投稿データを表示させるflexコンテナを返す。
@@ -147,19 +153,55 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         }
     };
     var eh = {  // イベントハンドラオブジェクト。
-        dic: null,
+        _node: null,  // 投稿一覧を表示しているノード。
+        _timer: null,  // ノードのハイライトを消すタイマーID。
+        _rgbaC: null, // 背景色。
+        _dic: null,  // 投稿データの辞書。
         init: function(dic) {
-            eh.dic = dic;
+            eh._dic = dic;
         },
         mouseDown: function(e) {  // 要素をクリックしたときのイベントを受け取る関数。
             var target = e.target;  // イベントを発生したオブジェクト。
             if (target.className=="post") {  // 投稿がある日のとき
+                if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
+                    eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
+                }
+                eh._node = target;  // 投稿を表示させるノードを新たに取得。
                 var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
                 elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日";
-                eh.dic[target.textContent].forEach(function(e) {
+                eh._dic[target.textContent].forEach(function(e) {
                     elem.appendChild(nd.postNode(e));
                 });
+            } else if (target.className=="nopost") {  // 投稿がない日のとき
+                var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
+                elem.textContent = null;  // 表示を消す。
+                if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
+                    eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
+                    eh._node = null;  // 取得しているノードを消去。
+                }                
             }
+        },
+        mouseOver: function(e) {
+            var target = e.target;  // イベントを発生したオブジェクト。
+            if (target.className=="post") {  // 投稿がある日のとき
+                target.style.textDecoration = "underline";  // 文字に下線をつける。
+                target.style.color = "#33aaff";  // 文字色を変える。
+                eh._rgbaC = window.getComputedStyle(e.target, '').backgroundColor;  // 背景色のRGBAを取得。
+                var alpha = Number(/\d+\.\d+/.exec(eh._rgbaC)[0]);  // 透明度を取得。
+                var alpha2 = alpha + 0.3;  // 透明度を加える。
+                alpha2 = (alpha2>1)?1:alpha2;  // 透明度が1より大きければ1にする。
+                target.style.backgroundColor = eh._rgbaC.replace(alpha,alpha2); // 透明度を変更する。
+            }
+        },
+        mouseOut: function(e) {
+            var target = e.target;  // イベントを発生したオブジェクト。
+            if (target.className=="post") {  // 投稿がある日のとき
+                target.style.textDecoration = null;  // 文字の下線を消す。 
+                target.style.color = null;  // 文字の色設定を消す。
+                if (target!==eh._node) {  // そのノードの投稿一覧を表示させていないとき。
+                    target.style.backgroundColor = eh._rgbaC; // 背景色を元に戻す。
+                }
+            }            
         }
     };
     function writeScript(url) {  // スクリプト注入。
@@ -181,7 +223,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
     }
     return cl;  // グローバルスコープにオブジェクトを出す。
 }();
-Calendar2_Blogger.all("calendar_blogger2");  // idがcalendar_bloggerの要素にカレンダーを表示させる。
+Calendar2_Blogger.all("calendar2_blogger");  // idがcalendar_bloggerの要素にカレンダーを表示させる。
 
 
 
