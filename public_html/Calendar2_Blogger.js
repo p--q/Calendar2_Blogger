@@ -32,9 +32,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
                 var dt = new Date(2013,8,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
-                vars.init(dt);  // 日付オブジェクトからカレンダーのデータを作成。
-                var max = vars.y + "-" + cal.fm(vars.m) + "-" + cal.fm(vars.em) + "T23:59:59%2B09:00";  // 表示カレンダーの最終日23時59分59秒までのフィードを得るための日時を作成。
-                cal.createURL(max);  // フィードを取得するためのURLを作成。
+                cal.getFeed(dt);
             } 
         }        
     };  // end of cl
@@ -56,9 +54,19 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
     };  // end of vars
     var cal = {  // カレンダーを作成するオブジェクト。
         _holidayC: "rgb(255, 0, 0)",  // 休日の文字色
-        _SatC: "rgb(0, 51, 255)",  //  土曜日の文字色        
+        _SatC: "rgb(0, 51, 255)",  //  土曜日の文字色 
+        getFeed: function(dt) {  // 日付オブジェクトからフィードを得てカレンダーを作成する。
+            vars.init(dt);  // 日付オブジェクトからカレンダーのデータを作成。
+            var max = vars.y + "-" + cal.fm(vars.m) + "-" + cal.fm(vars.em) + "T23:59:59%2B09:00";  // 表示カレンダーの最終日23時59分59秒までのフィードを得るための日時を作成。
+            cal.createURL(max);  // フィードを取得するためのURLを作成。            
+        },
         createCalendar:  function(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
             var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
+            calflxC.appendChild(nd.arrowflxI('\u00ab',"left_calendar"));  // 左向き矢印のflexアイテム。flexBasis14%。
+            var title = (vars.order=="published")?"":"更新日";
+            title = vars.y + "年" + vars.m + "月" + title;
+            calflxC.appendChild(nd.titleflxI(title));  // カレンダータイトルのflexアイテム。flexBasis 72%。
+            calflxC.appendChild(nd.arrowflxI('\u00bb',"right_calendar"));  // 右向き矢印のflexアイテム。flexBasis14%。
             vars.days.forEach(function(e,i){  // 1行目に曜日を表示させる。2番目の引数は配列のインデックス。
                 var node = nd.calflxI(e);  // 曜日のflexアイテムを取得。
                 node.s = i;  // 曜日番号を取得。
@@ -167,7 +175,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         _a: function(arr) {  // 投稿のurlを入れたa要素を返す。
             var node = eh.createElem("a"); 
             node.href = arr[0];  // 配列から投稿のurlを取得。
-            return node.cloneNode(true);
+            return node;
         },
         _titleflxI: function(arr) {  // 投稿タイトルの投稿のflexアイテムを返す。
             var node = eh.createElem("div");  // flexアイテムになるdiv要素を生成。
@@ -187,6 +195,26 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             var titleflxI = nd._titleflxI(arr);
             node.appendChild(titleflxI);
             return node;
+        },
+        arrowflxI: function(text,id) {  // 月を移動するボタンを返す。
+            var node = eh.createElem("div");  // flexアイテムになるdiv要素を生成。
+            node.textContent = text;
+            node.id = id;
+            node.style.flex = "0 0 14%";  // 1/7幅で伸縮しない。
+            node.style.textAlign = "center";
+            node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
+            node.title = (id="left_calendar")?"翌月へ":"前月へ";
+            return node;
+        },
+        titleflxI: function(title) {
+            var node = eh.createElem("div");  // flexアイテムになるdiv要素を生成。
+            node.textContent = title;
+            node.id = "title_calendar";
+            node.style.flex = "1 0 72%";
+            node.style.textAlign = "center";
+            node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
+            node.title = "公開日と更新日を切り替える";
+            return node;
         }
     };  // end of nd
     var eh = {  // イベントハンドラオブジェクト。
@@ -200,29 +228,47 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         },
         mouseDown: function(e) {  // 要素をクリックしたときのイベントを受け取る関数。
             var target = e.target;  // イベントを発生したオブジェクト。
-            if (target.className=="post") {  // 投稿がある日のとき
-                if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
-                    eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
-                }
-                eh._node = target;  // 投稿を表示させるノードを新たに取得。
-                var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
-                elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
-                eh._dic[target.textContent].forEach(function(e) {
-                    elem.appendChild(nd.postNode(e));
-                });
-            } else if (target.className=="nopost") {  // 投稿がない日のとき
-                var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
-                elem.textContent = null;  // 表示を消す。
-                if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
-                    eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
-                    eh._node = null;  // 取得しているノードを消去。
-                }                
+            switch (target.className) {
+                case "post":  // 投稿がある日のとき
+                    if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
+                        eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
+                    }
+                    eh._node = target;  // 投稿を表示させるノードを新たに取得。
+                    var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
+                    elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
+                    eh._dic[target.textContent].forEach(function(e) {
+                        elem.appendChild(nd.postNode(e));
+                    });                  
+                    break;
+                case "nopost":  // 投稿がない日のとき
+                    var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
+                    elem.textContent = null;  // 表示を消す。
+                    if (eh._node) {  // 投稿一覧を表示させているノードがあるとき。
+                        eh._node.style.backgroundColor = eh._rgbaC; // そのノードの背景色を元に戻す。
+                        eh._node = null;  // 取得しているノードを消去。
+                    }
+                    break;
+                default:
+                    switch (target.id) {
+                        case "title_calendar":  // 公開日と更新日を切り替える。
+                            vars.order = (vars.order=="published")?"updated":"published";
+                            var dt = new Date(vars.y, vars.m-1, 1);
+                            cal.getFeed(dt);
+                            break;
+                        case "left_calendar":
+                            var dt = new Date(vars.y,vars.m,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
+                            cal.getFeed(dt);
+                            break;
+                        case "right_calendar":  
+                            var dt = new Date(vars.y,vars.m-2,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
+                            cal.getFeed(dt);
+                            break;
+                    }
             }
         },
         mouseOver: function(e) {
             var target = e.target;  // イベントを発生したオブジェクト。
             if (target.className=="post") {  // 投稿がある日のとき
-                eh._style = window.getComputedStyle(e.target, '');  // 変更前のstyleを取得する。
                 target.style.textDecoration = "underline";  // 文字に下線をつける。
                 eh._fontC = window.getComputedStyle(e.target, '').color;  // 文字色を取得。
                 target.style.color = "#33aaff";  // 文字色を変える。
@@ -231,6 +277,16 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 var alpha2 = alpha + 0.3;  // 透明度を加える。
                 alpha2 = (alpha2>1)?1:alpha2;  // 透明度が1より大きければ1にする。
                 target.style.backgroundColor = eh._rgbaC.replace(alpha,alpha2); // 透明度を変更する。
+            } else {
+                switch (target.id) {
+                    case "title_calendar":
+                    case "left_calendar":
+                    case "right_calendar":
+                        target.style.textDecoration = "underline";  // 文字に下線をつける。
+                        eh._fontC = window.getComputedStyle(e.target, '').color;  // 文字色を取得。
+                        target.style.color = "#33aaff";  // 文字色を変える。 
+                        break;
+                }
             }
         },
         mouseOut: function(e) {
@@ -240,6 +296,14 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 target.style.color = eh._fontC;  // 変更前の文字色に戻す。
                 if (target!==eh._node) {  // そのノードの投稿一覧を表示させていないとき。
                     target.style.backgroundColor = eh._rgbaC; // 背景色を元に戻す。
+                }
+            } else {
+                switch (target.id) {
+                    case "title_calendar":
+                    case "left_calendar":
+                    case "right_calendar":
+                        target.style.textDecoration = null;  // 文字の下線を消す。 
+                        target.style.color = eh._fontC;  // 変更前の文字色に戻す。                             
                 }
             }            
         },
