@@ -6,17 +6,15 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 Array.prototype.push.apply(vars.posts, json.feed.entry);// 投稿のフィードデータを配列に追加。
                 if (json.feed.openSearch$totalResults.$t < vars.max) {  // 取得投稿数がvars.maxより小さい時はすべて取得できたと考える。
                     var re = /\d\d(?=T\d\d:\d\d:\d\d\.\d\d\d.\d\d:\d\d)/i;  //  フィードの日時データから日を取得するための正規表現パターン。
-                    var dic = {};  // キーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
-                    var d;  // 投稿がある日。
-                    var url;  // サムネイルのurl。
+//                    var dic = {};  // キーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
                     vars.posts.forEach(function(e){  // 投稿のフィードデータについて
-                        d = Number(re.exec(e[vars.order].$t));  // 投稿の日を取得。
-                        dic[d] = dic[d] || [];  // 辞書の値の配列を初期化する。
-                        url = (e.media$thumbnail)?e.media$thumbnail.url:null;
-                        dic[d].push([e.link[4].href, e.link[4].title, url]);  // 辞書の値の配列に[投稿のURL, 投稿タイトル, サムネイルのURL]の配列を入れて2次元配列にする。
+                        var d = Number(re.exec(e[vars.order].$t));  // 投稿の日を取得。
+                        vars.dic[d] = vars.dic[d] || [];  // 辞書の値の配列を初期化する。
+                        var url = (e.media$thumbnail)?e.media$thumbnail.url:null;  // サムネイルのurl。
+                        vars.dic[d].push([e.link[4].href, e.link[4].title, url]);  // 辞書の値の配列に[投稿のURL, 投稿タイトル, サムネイルのURL]の配列を入れて2次元配列にする。
                         }
                     );
-                    cal.createCalendar(dic);  // フィードデータからカレンダーを作成する。
+                    cal.createCalendar();  // フィードデータからカレンダーを作成する。
                 } else {  // 未取得のフィードを再取得する。最新の投稿が先頭に来る。
                     var m = /(\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)\.\d\d\d(.\d\d:\d\d)/i.exec(json.feed.entry[json.feed.entry.length-1][vars.order].$t);  // フィードの最終投稿（最古）データの日時を取得。
                     var dt = new Date;  // 日付オブジェクトを生成。
@@ -32,6 +30,13 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
                 var dt = new Date(2013,8,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
+                
+                
+                
+                
+                
+                
+                
                 cal.getFeed(dt);
             } 
         }        
@@ -42,6 +47,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         em: null,  //表示カレンダーの末日。
         max: 150,  // Bloggerのフィードで取得できる最大投稿数を設定。
         posts: [],  // 投稿のフィードデータを収納する配列。
+        dic: {},  // キーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
         order: "published",  // publishedかupdatedが入る。
         elem: null,  // 置換するdiv要素。
         dataPostsID: "datePosts",  // 日の投稿の一覧を表示するdivのID
@@ -50,6 +56,8 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.y = dt.getFullYear();  // 表示カレンダーの年を取得。
             vars.m = dt.getMonth() + 1;  // 表示カレンダーの月を取得。
             vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
+            vars.posts = [];  // フィードデータをリセットする。
+            vars.dic = {};  // 投稿データをリセットする。
         }
     };  // end of vars
     var cal = {  // カレンダーを作成するオブジェクト。
@@ -60,7 +68,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             var max = vars.y + "-" + cal.fm(vars.m) + "-" + cal.fm(vars.em) + "T23:59:59%2B09:00";  // 表示カレンダーの最終日23時59分59秒までのフィードを得るための日時を作成。
             cal.createURL(max);  // フィードを取得するためのURLを作成。            
         },
-        createCalendar:  function(dic) {  // カレンダーのHTML要素を作成。 引数はキーを日、値を投稿のURLと投稿タイトルの配列、とする辞書。
+        createCalendar:  function() {  // カレンダーのHTML要素を作成。 
             var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
             calflxC.appendChild(nd.arrowflxI('\u00ab',"left_calendar"));  // 左向き矢印のflexアイテム。flexBasis14%。
             var title = (vars.order=="published")?"":"更新日";
@@ -79,7 +87,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             }
             var dateflxI;  // 日のflexアイテム。
             for(var i = 1; i < vars.em+1; i++) {  // 1日から末日まで。
-                if (i in dic) {  // 辞書のキーに日があるとき
+                if (i in vars.dic) {  // 辞書のキーに日があるとき
                     dateflxI = nd.dateflxIWithPost(i); // 投稿のある日のカレンダーのflexアイテム。
                 } else {  // 辞書のキーに日がないとき
                     dateflxI = nd.calflxI(i); // 投稿のない日のカレンダーのflexアイテム。  
@@ -95,7 +103,6 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                     calflxC.appendChild(nd.calflxI());  //  空白のカレンダーのflexアイテムをflexコンテナに追加。
                 }        
             } 
-            eh.init(dic);  // イベントハンドラのオブジェクトに投稿データの辞書を渡して初期化。
             calflxC.addEventListener( 'mousedown', eh.mouseDown, false );  // カレンダーのflexコンテナでイベントバブリングを受け取る。マウスが要素をクリックしたとき。
             calflxC.addEventListener( 'mouseover', eh.mouseOver, false );  // マウスポインタが要素に入った時。
             calflxC.addEventListener( 'mouseout', eh.mouseOut, false );  // マウスポインタが要素から出た時。
@@ -222,10 +229,6 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         _timer: null,  // ノードのハイライトを消すタイマーID。
         _rgbaC: null, // 背景色。styleオブジェクトで取得すると参照渡しになってしまう。
         _fontC: null,  // 文字色。
-        _dic: null,  // 投稿データの辞書。
-        init: function(dic) {
-            eh._dic = dic;
-        },
         mouseDown: function(e) {  // 要素をクリックしたときのイベントを受け取る関数。
             var target = e.target;  // イベントを発生したオブジェクト。
             switch (target.className) {
@@ -236,7 +239,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                     eh._node = target;  // 投稿を表示させるノードを新たに取得。
                     var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
                     elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
-                    eh._dic[target.textContent].forEach(function(e) {
+                    vars.dic[target.textContent].forEach(function(e) {
                         elem.appendChild(nd.postNode(e));
                     });                  
                     break;
