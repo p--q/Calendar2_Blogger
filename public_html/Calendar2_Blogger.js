@@ -29,6 +29,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         all: function(elemID) {  // ここから開始する。
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
+                vars.L10N = (/.jp$/i.test(location.hostname))?false:true;  // jpドメイン以外のときフラグを立てる。
                 var dt; // 日付オブジェクト。
                 var mc = /\/(20\d\d)\/([01]\d)\//.exec(document.URL)  // URLから年と月を正規表現で得る。
                 if (mc) {  // URLから年と月を取得できた時
@@ -51,14 +52,17 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         order: "published",  // publishedかupdatedが入る。
         elem: null,  // 置換するdiv要素。
         dataPostsID: "datePosts",  // 日の投稿の一覧を表示するdivのID
-        days: ["日","月","火","水","木","金","土"],  // 曜日の配列。
+        days: [],  // 曜日の配列。
         init: function (dt) {  // 日付オブジェクトからカレンダーのデータを作成。
             vars.y = dt.getFullYear();  // 表示カレンダーの年を取得。
             vars.m = dt.getMonth() + 1;  // 表示カレンダーの月を取得。
             vars.em = new Date(vars.y, vars.m, 0).getDate();  // 表示カレンダーの末日を取得。
             vars.posts = [];  // フィードデータをリセットする。
             vars.dic = {};  // 投稿データをリセットする。
-        }
+            vars.days = (vars.L10N)?["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]: ["日","月","火","水","木","金","土"];  // 曜日の配列。
+        },
+        L10N: false,  // 日本語以外かのフラグ。
+        enM: ["Jan.","Feb.","Mar.","Apr.","May","Jun.","Jul.","Aug.","Sept.","Oct.","Nov.","Dec."]
     };  // end of vars
     var cal = {  // カレンダーを作成するオブジェクト。
         _holidayC: "rgb(255, 0, 0)",  // 休日の文字色
@@ -71,7 +75,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         createCalendar:  function() {  // カレンダーのHTML要素を作成。 
             var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
             calflxC.appendChild(nd.arrowflxI('\u00ab',"left_calendar"));  // 左向き矢印のflexアイテム。flexBasis14%。
-            var title = (vars.order=="published")?"":"更新日";
+            var title =  (vars.L10N)?((vars.order=="published")?"":"updated"):((vars.order=="published")?"":"更新日");
             title = vars.y + "年" + vars.m + "月" + title;
             calflxC.appendChild(nd.titleflxI(title));  // カレンダータイトルのflexアイテム。flexBasis 72%。
             calflxC.appendChild(nd.arrowflxI('\u00bb',"right_calendar"));  // 右向き矢印のflexアイテム。flexBasis14%。
@@ -213,7 +217,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.style.flex = "0 0 14%";  // 1/7幅で伸縮しない。
             node.style.textAlign = "center";
             node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
-            node.title = (id=="left_calendar")?"翌月へ":"前月へ";
+            node.title = (vars.L10N)?((id=="left_calendar")?"Newer":"Older"):((id=="left_calendar")?"翌月へ":"前月へ");
             return node;
         },
         titleflxI: function(title) {
@@ -223,7 +227,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.style.flex = "1 0 72%";
             node.style.textAlign = "center";
             node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
-            node.title = "公開日と更新日を切り替える";
+            node.title = (vars.L10N)?"Switching between published and updated":"公開日と更新日を切り替える";
             return node;
         }
     };  // end of nd
@@ -241,7 +245,11 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                     }
                     eh._node = target;  // 投稿を表示させるノードを新たに取得。
                     var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
-                    elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
+                    if (vars.L10N) {
+                        elem.textContent = vars.enM[vars.m-1] + " " + target.textContent + ", " + vars.y;
+                    } else {
+                        elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
+                    }
                     vars.dic[target.textContent].forEach(function(e) {
                         elem.appendChild(nd.postNode(e));
                     });                  
