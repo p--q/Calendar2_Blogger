@@ -335,6 +335,3 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
     return cl;  // グローバルスコープにオブジェクトを出す。
 }();
 Calendar2_Blogger.all("calendar2_blogger");  // idがcalendar_bloggerの要素にカレンダーを表示させる。
-
-
-
