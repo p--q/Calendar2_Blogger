@@ -89,6 +89,9 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             for(var i = 1; i < vars.em+1; i++) {  // 1日から末日まで。
                 if (i in vars.dic) {  // 辞書のキーに日があるとき
                     dateflxI = nd.dateflxIWithPost(i); // 投稿のある日のカレンダーのflexアイテム。
+                    vars.dic[i].forEach(function(arr) {  // title属性に投稿タイトルのみ入れる。
+                        dateflxI.title += (dateflxI.title)?"\n" + "\u30fb" + arr[1]:"\u30fb" + arr[1];
+                    })
                 } else {  // 辞書のキーに日がないとき
                     dateflxI = nd.calflxI(i); // 投稿のない日のカレンダーのflexアイテム。  
                     dateflxI.className = "nopost"; 
