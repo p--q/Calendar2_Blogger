@@ -29,14 +29,14 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
         all: function(elemID) {  // ここから開始する。
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
-                var dt = new Date(2013,8,1);  // 日付オブジェジェクト。例の日付データ:2013年9月1日。
-                
-                
-                
-                
-                
-                
-                
+                var dt; // 日付オブジェクト。
+                var m = /\/(20\d\d)\/([12]\d)\//.exec(document.URL)  // URLから年と月を正規表現で得る。
+                if (m) {  // URLから年と月を取得できた時
+                    var m = Number(m[2]) - 1;  // 月ひく1を取得
+                    dt = new Date(m[1],vars.m,1);
+                } else {  // アイテムページ以外の時は今日の日付を取得。
+                    dt = new Date();
+                };
                 cal.getFeed(dt);
             } 
         }        
@@ -210,7 +210,7 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.style.flex = "0 0 14%";  // 1/7幅で伸縮しない。
             node.style.textAlign = "center";
             node.style.cursor = "pointer";  // マウスポインタの形状を変化させる。
-            node.title = (id="left_calendar")?"翌月へ":"前月へ";
+            node.title = (id=="left_calendar")?"翌月へ":"前月へ";
             return node;
         },
         titleflxI: function(title) {
