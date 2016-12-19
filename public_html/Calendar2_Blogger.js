@@ -75,13 +75,16 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             var calflxC = nd.calflxC();  // カレンダーのflexコンテナを得る。
             calflxC.appendChild(nd.arrowflxI('\u00ab',"left_calendar"));  // 左向き矢印のflexアイテム。flexBasis14%。
             var title =  (vars.L10N)?((vars.order=="published")?"":"updated"):((vars.order=="published")?"":"更新");
-            title = vars.y + "年" + vars.m + "月" + title;
+            title = (vars.L10N)?vars.enM[vars.m-1] + " " + vars.y + " " + title:vars.y + "年" + vars.m + "月" + title;
             calflxC.appendChild(nd.titleflxI(title));  // カレンダータイトルのflexアイテム。flexBasis 72%。
             calflxC.appendChild(nd.arrowflxI('\u00bb',"right_calendar"));  // 右向き矢印のflexアイテム。flexBasis14%。
             vars.days.forEach(function(e,i){  // 1行目に曜日を表示させる。2番目の引数は配列のインデックス。
                 var node = nd.calflxI(e);  // 曜日のflexアイテムを取得。
                 node.s = i;  // 曜日番号を取得。
                 cal._getDayC(node);  // 曜日の色をつける。
+                if (vars.L10N) {
+                    node.style.fontSize = "80%";  // 英語表記では1行に収まらないのでフォントサイズを縮小。
+                }
                 calflxC.appendChild(node);  // カレンダーのflexコンテナに追加。
             });
             var day =  new Date(vars.y, vars.m-1, 1).getDay();  // 1日の曜日を取得。日曜日は0、土曜日は6になる。
@@ -168,8 +171,8 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             node.style.flexDirection = "column";  // flexアイテムを縦並びにする。
             return node;
         },
-        _postflxC: function() {  // 日の投稿のflexコンテナを返す。
-            var node = eh.createElem("div");  // flexコンテナになるdiv要素を生成。
+        _postflxC: function() {  // 日の投稿のdiv要素を返す。
+            var node = eh.createElem("div");  // div要素を生成。
             node.style.borderTop = "dashed 1px rgba(128,128,128,.5)";
             node.style.paddingTop = "5px";       
             return node;
@@ -244,10 +247,12 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                     eh._node = target;  // 投稿を表示させるノードを新たに取得。
                     var elem = document.getElementById(vars.dataPostsID);  // idから追加する対象の要素を取得。
                     if (vars.L10N) {
-                        elem.textContent = vars.enM[vars.m-1] + " " + target.textContent + ", " + vars.y;
+                        elem.textContent = vars.order + ": " + vars.enM[vars.m-1] + " " + target.textContent;
                     } else {
-                        elem.textContent = vars.y + "年" + vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ")";
+                        var order = (vars.order=="published")?"公開":"更新";
+                        elem.textContent = vars.m + "月" + target.textContent + "日(" + vars.days[target.s] + ") " + order;
                     }
+                    elem.style.paddingTop = "5px";
                     vars.dic[target.textContent].forEach(function(e) {
                         elem.appendChild(nd.postNode(e));
                     });                  
