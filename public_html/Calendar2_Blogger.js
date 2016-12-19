@@ -30,10 +30,10 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
             vars.elem = document.getElementById(elemID);  // idから追加する対象の要素を取得。
             if (vars.elem) {  // 追加対象の要素が存在するとき
                 var dt; // 日付オブジェクト。
-                var m = /\/(20\d\d)\/([12]\d)\//.exec(document.URL)  // URLから年と月を正規表現で得る。
-                if (m) {  // URLから年と月を取得できた時
-                    var m = Number(m[2]) - 1;  // 月ひく1を取得
-                    dt = new Date(m[1],vars.m,1);
+                var mc = /\/(20\d\d)\/([01]\d)\//.exec(document.URL)  // URLから年と月を正規表現で得る。
+                if (mc) {  // URLから年と月を取得できた時
+                    var m = Number(mc[2]) - 1;  // 月ひく1を取得
+                    dt = new Date(mc[1],m,1);
                 } else {  // アイテムページ以外の時は今日の日付を取得。
                     dt = new Date();
                 };
@@ -276,10 +276,13 @@ var Calendar2_Blogger = Calendar2_Blogger || function() {
                 eh._fontC = window.getComputedStyle(e.target, '').color;  // 文字色を取得。
                 target.style.color = "#33aaff";  // 文字色を変える。
                 eh._rgbaC = window.getComputedStyle(e.target, '').backgroundColor;  // 背景色のRGBAを取得。
-                var alpha = Number(/\d+\.\d+/.exec(eh._rgbaC)[0]);  // 透明度を取得。
-                var alpha2 = alpha + 0.3;  // 透明度を加える。
-                alpha2 = (alpha2>1)?1:alpha2;  // 透明度が1より大きければ1にする。
-                target.style.backgroundColor = eh._rgbaC.replace(alpha,alpha2); // 透明度を変更する。
+                var mc = /\d+\.\d+/.exec(eh._rgbaC);  // 透明度を正規表現で取得。
+                if (mc) {  // 取得できた時。
+                    var alpha = Number(mc[0]);  // 透明度を取得。
+                    var alpha2 = alpha + 0.3;  // 透明度を加える。
+                    alpha2 = (alpha2>1)?1:alpha2;  // 透明度が1より大きければ1にする。
+                    target.style.backgroundColor = eh._rgbaC.replace(alpha,alpha2); // 透明度を変更する。                    
+                }
             } else {
                 switch (target.id) {
                     case "title_calendar":
